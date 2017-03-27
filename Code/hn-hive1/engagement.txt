@@ -1,0 +1,1 @@
+select t.domain, (t.total_comments/t.num_posts) as engagement from (select domain, count(*) as num_posts,sum(num_points) as total_score, sum(num_comments) as total_comments, count(distinct author) as num_authors from hk_iter3 group by domain)t order by engagement desc

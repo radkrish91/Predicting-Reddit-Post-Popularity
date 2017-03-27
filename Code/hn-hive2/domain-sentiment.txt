@@ -1,0 +1,22 @@
+Create table query:
+
+create external table hk_iter3(
+domain string,
+sent_class string,
+title_ string,
+url_ string,
+num_points string ,
+num_comments string,
+author string,
+created_at string,
+neg string,
+neu string,
+pos string,
+comp string
+)
+row format delimited fields terminated by ','
+location ‘/user/rm4261/project/hackerrank/output/’
+
+Domain-Sentiment based score query:
+
+insert overwrite directory '/user/rm4261/project/hackerrank/visualize' row format delimited fields terminated by ',' select domain, sent_class, count(*) as num_posts,sum(num_points) as total_score, sum(num_comments) as total_comments, count(distinct author) as num_authors from hk_iter3 where sent_class != '3' group by domain,sent_class order by total_score desc;

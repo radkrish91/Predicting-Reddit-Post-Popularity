@@ -1,0 +1,194 @@
+IThis document details the function of each folder under Code/ 
+The paths to input and output files on HDFS or Home are also included here. 
+The screenshots can be found under Screenshots/
+
+
+Reddit Posts and Comments ::
+
+first-iteration/
+	Find the number of comments, total/avg score in each link and each subreddit
+	-input /user/pc1947/project/data/reddit-v5.csv 
+	-output /user/pc1947/project/output/first-iteration 
+
+
+second-iteration/
+	Find the number of links and comments, total/avg score in each subreddit
+	-input /user/pc1947/project/output/first-iteration/ 
+	-output /user/pc1947/project/output/second-iteration
+	These two iterations help us decide the list of subreddits that might be interesting to work on.
+
+
+subreddits/
+	Retrieve only the required subreddits from the Reddit dataset
+	-input /user/ve365/reddit-v5.csv 
+	-output /user/ve365/subreddits/
+	list_of_subreddits = [AskReddit, funny, pics, todayilearned, gaming, pcmasterrace, news, movies, nba, mildlyinteresting, GlobalOffensive]
+
+
+overall-sentiment/
+	Find the overall sentiment prevalent under each subreddit. Sentiment analyzed using NLTK's Vader module.
+	-input /user/pc1947/project/output/subreddits
+	-output /user/pc1947/project/output/overall-sentiment/ 
+
+
+individual-sentiment/
+	Find sentiment for each comment in the Reddit dataset using Vader. The sentiments are divided into five classes {1: 'Highly Positive', 2: 'Moderately Positive', 3: 'Neutral', 4: 'Moderately Negative', 5: 'Highly Negative'}
+	-intput /user/ve365/subreddits/
+	-output /user/ve365/individual-sentiment
+
+
+sentiment-engagement-1st/
+	First step in identifying how engagement and sentiments are related under a subreddit.
+	-input /user/pc1947/project/output/individual-sentiment
+	-output /user/pc1947/project/output/sentiment-engagement-1st
+
+
+sentiment-engagement-2nd/
+	Second step in identifying how engagement and sentiments are related under a subreddit.
+	-input /user/pc1947/project/output/sentiment-engagement-1st
+	-output /user/pc1947/project/output/sentiment-engagement-2nd
+
+
+frequency-distribution-1st/
+	Find how frequently words in the Reddit corpora is used to express a particular sentiment
+	-input /user/pc1947/project/output/individual-sentiment
+	-output /user/pc1947/project/output/frequency-distribution-1st
+
+
+frequency-distribution-2nd/
+	Find how frequently words in the Reddit corpora is used to express a particular sentiment. This does not include any words that contain numbers/digits. That is the only variation from frequency-distribution-1st/
+	-input /user/ve365/individual-sentiment
+	-output /user/ve365/frequency-distribution-2nd
+
+
+timeline-1st/
+	First step in organizing the comments in each subreddit and sentiment into buckets. There are 24 buckets - one for each hour of the day.
+	-input /user/pc1947/project/output/individual-sentiment
+	-output /user/pc1947/project/output/timeline-1st
+
+
+timeline-2nd/
+	Second step in organizing the comments in each subreddit and sentiment into buckets. There are 24 buckets - one for each hour of the day.
+	-input /user/pc1947/project/output/timeline-1st
+	-output /user/pc1947/project/output/timeline-2nd
+
+
+timeline-3rd/
+	First step in organizing the comments in each subreddit and sentiment into buckets. There are 24 buckets for each hour of the day and 31 additional buckets for each day of the month (May).
+	-input /user/ve365/individual-sentiment
+	-output	/user/ve365/timeline-3rd
+
+
+timeline-4th/
+	Second step in organizing the comments in each subreddit and sentiment into buckets. There are 24 buckets for each hour of the day and 31 additional buckets for each day of the month (May).
+	-input	/user/ve365/timeline-3rd
+	-output	/user/ve365/timeline-4th
+
+
+popularword-sentiment/
+	Find the most popular words used in each subreddit for a particular sentiment
+	-input /user/pc1947/project/output/frequency-distribution-2nd 
+	-output /user/pc1947/project/output/popularword-sentiment
+
+
+authors/
+	Find the number of comments posted with a particular sentiment by each author in each subreddit. Also includes the average score and sentiment value
+	-input /user/ve365/individual-sentiment
+	-output	/user/ve365/author
+
+
+normalized-authors/
+	Find a normalized score for each author classified based on sentiment and subreddit
+	-input	/user/ve365/author
+	-output /user/ve365/normalized-author
+
+
+normalized-timeline/
+ 	Find the normalized score for each of the 24 buckets in a day classified based on subreddit and sentiment
+ 	-input /user/pc1947/project/output/timeline-2nd
+ 	-output /user/pc1947/project/output/normalized-timeline
+
+
+tokenized-comments/
+	Remove stopwords and non-alpha characters from the body of the comment using NTLK's TreebankWordTokenizer. This is a preparatory step for generating ngrams. 
+	-input /user/ve365/individual-sentiment
+	-output /user/ve365/tokenized-comments
+
+
+ngrams/
+	Generate ngrams from the tokenized comments. We have considered only bi-grams and tri-grams for this analytic. Find the frequency and average score of each bi-gram / tri-gram for a given subreddit and sentiment. 
+	-input /user/pc1947/project/output/tokenized-comments
+	-output /user/pc1947/project/output/ngrams
+
+
+prediction-ngram/
+	Generate bi-grams and tri-grams for an input and predict the influence of each of these ngrams based on the model generated at ngrams/. 
+	-input /user/pc1947/project/output/ngrams
+	-output /user/pc1947/project/output/prediction-ngram
+
+
+prediction-author/
+	Predict the influence of an author on the overall score and engagement of a comment. The data from  normalized-authors/ is used here.
+	-input /user/pc1947/project/output/normalized-authors 
+	-output /user/pc1947/project/output/prediction-author
+
+
+prediction-timeline/
+	Predict the influence of time on the overall score of the comment. The normalized bucket scores are used here. 
+	-input /user/pc1947/project/output/normalized-timeline
+	-output /user/pc1947/project/output/prediction-timeline
+
+
+HiveQueries/
+	These Hive queries creates table for author data and timeline data. It also finds the total scores for every author in every subreddit for every sentiment class and the total scores for every hour in every subreddit for every sentiment class.
+	-input /scratch/rm4261/author-data, /scratch/rm4261/timeline-2nd-data
+	-output /home/rm4261/reddit/author_data, /home/rm4261/reddit/timeline_Data/output
+
+BigQuery/
+	These Hive queries finds the top 20 subreddits with most engagement and finds number of posts, comments and authors involved every hour in the 24-hour scale.
+	-input  https://bigquery.cloud.google.com/table/fh-bigquery:reddit_posts.2015_12, 
+	-input https://bigquery.cloud.google.com/table/reddit-151117:New_Posts.timeline 
+	-output /user/ve365/reddit_posts
+
+
+
+Hackernews ::
+
+profiling/
+	The files in this folder profiles the dataset to provide the range of values (integer) or the maximum length of values(string) in each column.
+	-input /home/rm4261/HN_posts_year_to_Sep_26_2016.csv
+	-output /home/rm4261/hackerrank/profiling/output
+
+
+cleaning/
+	The files in this folder cleans the dataset by removing the rows with null values and the unnecessary columns.
+	-input /home/rm4261/HN_posts_year_to_Sep_26_2016.csv 
+	-output /home/rm4261/hackerrank/cleaning/output
+
+
+hn-sentiment1/
+	The files in this folder assigns sentiment scores using Vader Sentiment Analyzer in the python NLTK package and parses the url and converts it into domain.
+	-input /home/rm4261/hackerrank/cleaning/output/
+	-output /home/rm4261/hackerrank/iter1/output
+
+
+hn-sentiment2/
+	The files in this folder assigns sentiment class (1 to 5) based on the compound value in the previous iteration.
+	-input: /home/rm4261/hackerrank/iter1/output
+	-output: /home/rm4261/hackerrank/iter2/output
+
+hn-hive1/
+	This hive query finds the top 10 domains with the highest engagement factor.
+	-input: /home/rm4261/hackerrank/iter2/output
+	-output: (refer screenshot)
+
+hn-hive2/
+	This Hive query outputs sentiment based scores and comments for each domain.
+	-input: /home/rm4261/hackerrank/iter2/output
+	-output: /home/rm4261/hackerrank/visualize
+
+hn-author/
+	It outputs all the posts made by all the authors of the top 10 domains found in the previous step.
+	-input /home/rm4261/hackerrank/iter2/output
+
+

@@ -1,0 +1,38 @@
+Create table queries for reddit comment dataset:
+
+author data :
+
+create external table rd_author(
+subreddit string,
+author string,
+sentiment_class string,
+num_of_comments bigint ,
+avg_gilded string,
+avg_score bigint,
+avg_compound string,
+avg_neg string,
+avg_neu string,
+avg_pos string,
+sent_class bigint
+)
+row format delimited fields terminated by 
+location ‘/user/rm4261/project/hackerrank/output/’
+
+
+timeline data:
+
+create external table rd_timeline(
+subreddit string,
+bucket string,
+sentiment_class string,
+num_of_comments bigint ,
+avg_gilded string,
+avg_score bigint,
+avg_compound string,
+avg_neg string,
+avg_neu string,
+avg_pos string
+)
+row format delimited fields terminated by 
+location ‘/user/rm4261/project/reddit/timeline/’
+

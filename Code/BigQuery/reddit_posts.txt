@@ -1,0 +1,97 @@
+Top 20 engagement for every subreddit:
+
+select a.subreddit, a.nof_posts,a.tot_scores,a.nof_comments,(a.nof_comments/a.nof_posts) as engagement from(SELECT
+ subreddit,
+ SUM( num_comments)as nof_comments,
+ SUM( score ) as tot_scores,
+ COUNT(*) as nof_posts,
+ count(distinct author ) as authors
+FROM
+ [fh-bigquery:reddit_posts.2015_12]
+order by engagement desc limit 20
+
+
+Engagement for 10 random subreddits from top 20:
+
+select a.subreddit, a.nof_posts,a.tot_scores,a.nof_comments,(a.nof_comments/a.nof_posts) as engagement from(SELECT
+ subreddit,
+ SUM( num_comments)as nof_comments,
+ SUM( score ) as tot_scores,
+ COUNT(*) as nof_posts,
+ count(distinct author ) as authors
+FROM
+ [fh-bigquery:reddit_posts.2015_12]
+WHERE
+ subreddit = "nba"
+ OR subreddit = "todayilearned"
+ OR subreddit = "movies"
+ OR subreddit = "news"
+ OR subreddit = "AskReddit"
+ OR subreddit = "pics"
+ OR subreddit = "pcmasterrace"
+ OR subreddit = "funny"
+ OR subreddit = "gaming"
+ OR subreddit = "mildlyinteresting"
+ OR subreddit = "GlobalOffensive" 
+ group by subreddit)a 
+ order by engagement desc
+
+Engagement for those 10 subreddits with "author" factor included:
+
+ select a.subreddit, a.nof_posts,a.tot_scores,a.nof_comments,(a.nof_comments/a.nof_posts) *log2(a.authors) as engagement from(SELECT
+ subreddit,
+ SUM( num_comments)as nof_comments,
+ SUM( score ) as tot_scores,
+ COUNT(*) as nof_posts,
+ count(distinct author ) as authors
+FROM
+ [fh-bigquery:reddit_posts.2015_12]
+WHERE
+ subreddit = "nba"
+ OR subreddit = "todayilearned"
+ OR subreddit = "movies"
+ OR subreddit = "news"
+ OR subreddit = "AskReddit"
+ OR subreddit = "pics"
+ OR subreddit = "pcmasterrace"
+ OR subreddit = "funny"
+ OR subreddit = "gaming"
+ OR subreddit = "mildlyinteresting"
+ OR subreddit = "GlobalOffensive" 
+ group by subreddit)a 
+ order by engagement desc
+
+Convert Epoch to UTC Timestamp of all posts of the 10 important subreddits:
+
+SELECT
+ subreddit,author,score,num_comments,
+ TIMESTAMP(string(created_utc)) as datetimeconv
+FROM
+ [fh-bigquery:reddit_posts.2015_12]
+WHERE
+ subreddit = "nba"
+ OR subreddit = "todayilearned"
+ OR subreddit = "movies"
+ OR subreddit = "news"
+ OR subreddit = "AskReddit"
+ OR subreddit = "pics"
+ OR subreddit = "pcmasterrace"
+ OR subreddit = "funny"
+ OR subreddit = "gaming"
+ OR subreddit = "mildlyinteresting"
+ OR subreddit = "GlobalOffensive"
+
+ Number of posts, comments, and authors involved for every hour in the 24-hour format:
+
+SELECT
+ subreddit,
+ HOUR(MSEC_TO_TIMESTAMP(TIMESTAMP_TO_MSEC(datetimeconv) - (18000000))) AS hourly,
+ SUM(num_comments) AS no_of_comments,
+ SUM(score) AS total_score
+FROM
+ [reddit-151117:New_Posts.timeline]
+GROUP BY
+ subreddit,
+ hourly
+ORDER BY
+ subreddit, hourly

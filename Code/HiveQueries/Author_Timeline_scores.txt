@@ -1,0 +1,9 @@
+Author data - scores (finds the total score for each author in each subreddit for every sentiment class)
+
+insert overwrite directory ‘/user/rm4261/project/reddit/output’ row format delimited fields terminated by ',' SELECT subreddit, author, sentiment_class, num_of_comments, avg_gilded, avg_score, S.total_score, avg_compound, avg_neg, avg_neu, avg_pos FROM (SELECT subreddit, author, sentiment_class, num_of_comments, avg_gilded, avg_score, cast((num_of_comments * avg_score) as float) as total_score, avg_compound, avg_neg, avg_neu, avg_pos, rank() over (order by (cast(num_of_comments as float) * cast(avg_score as float) )desc) as r FROM rd_author where author != '[deleted]' AND author != 'Donald_Keyman') S;
+
+Timeline data - scores (finds the total score for each hour in each subreddit for every sentiment class)
+
+insert overwrite directory ‘/user/rm4261/project/reddit/output’ row format delimited fields terminated by ',' 
+SELECT subreddit, bucket, sentiment_class, num_of_comments, avg_gilded, avg_score, S.total_score, avg_compound, avg_neg, avg_neu, avg_pos FROM (SELECT subreddit, bucket, sentiment_class, num_of_comments, avg_gilded, avg_score, cast((num_of_comments * avg_score) as float) as total_score, avg_compound, avg_neg, avg_neu, avg_pos, rank() over (order by (cast(num_of_comments as float) * cast(avg_score as float) )asc) as r FROM rd_timeline) S;
+
